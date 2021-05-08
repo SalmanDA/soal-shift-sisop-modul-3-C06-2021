@@ -37,38 +37,50 @@ int main()
         return -1;
     }
 
-    char menu[255], id[255], password[255];
-    memset(menu, 0, sizeof(menu)); 
-    char idPassword[1024] = {0};
-
-    printf("--Main Menu--\n");
-    printf("1. Register\n");
-    printf("2. Login\n");
-    printf("Your Choice (1/2) : ");
-    scanf("%s", menu);
-    send(sock, menu, strlen(menu), 0);
-    valread = read(sock, buffer, 1024);
-
-    // printf("%s\n", buffer);
-
-    if (strcmp(buffer, "register") == 0)
+    while (1)
     {
-        printf("\n--Register--\n");
-        printf("id: ");
-        scanf("%s", id);
-        printf("\npassword: ");
-        scanf("%s", password);
-        sprintf(idPassword, "%s:%s\n", id, password);
-        send(sock, idPassword, strlen(idPassword), 0);
-        printf("\nregister success\n");
-    }
+        char menu[255], id[255], password[255];
+        memset(menu, 0, sizeof(menu));
+        char idPassword[1024] = {0};
 
-    else if (strcmp(buffer, "login") == 0) {
-        printf("\n--Login--\n");
-    }
+        printf("--Main Menu--\n");
+        printf("1. register\n");
+        printf("2. login\n");
+        printf("Your Choice (register / login / exit ) : ");
+        scanf("%s", menu);
+        send(sock, menu, strlen(menu), 0);
+        valread = read(sock, buffer, 1024);
 
-    else {
-        printf("Wrong Choice !\n");
+        if (strcmp(buffer, "register") == 0)
+        {
+            printf("\n--Register--\n");
+            printf("id: ");
+            scanf("%s", id);
+            printf("\npassword: ");
+            scanf("%s", password);
+            sprintf(idPassword, "%s:%s\n", id, password);
+            send(sock, idPassword, strlen(idPassword), 0);
+            printf("\nregister success\n\n");
+            memset(buffer, 0, sizeof(buffer));
+        }
+
+        else if (strcmp(buffer, "login") == 0)
+        {
+            printf("\n--Login--\n");
+            printf("id: ");
+            scanf("%s", id);
+            printf("\npassword: ");
+            scanf("%s", password);
+            sprintf(idPassword, "%s:%s\n", id, password);
+            send(sock, idPassword, strlen(idPassword), 0);
+            read(sock, buffer, 1024);
+            if (strcmp(buffer, "LoginSuccess") == 0)
+                printf("Logged in\n\n");
+            else if (strcmp(buffer, "LoginFailed:idPasswordWrong") == 0)
+                printf("Login failed, check your id or password\n\n");
+
+            memset(buffer, 0, sizeof(buffer));
+        }
     }
     return 0;
 }

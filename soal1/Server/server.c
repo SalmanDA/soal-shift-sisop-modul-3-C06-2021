@@ -12,11 +12,25 @@ struct sockaddr_in address;
 int addrlen = sizeof(address);
 FILE *fp;
 
-typedef struct account
+int checkAccount(char idPassword[])
 {
-    char id[255];
-    char password[255];
-} account;
+    FILE *file = fopen("akun.txt", "r");
+    if (file != NULL)
+    {
+        char lineFile[256];
+        while (fgets(lineFile, sizeof lineFile, file) != NULL)
+        {
+            if (strcmp(lineFile, idPassword) == 0)
+            {
+                fclose(file);
+                return 1;
+            }
+        }
+        fclose(file);
+    }
+
+    return 0;
+}
 
 void *app(void *arg)
 {
@@ -27,23 +41,39 @@ void *app(void *arg)
         exit(EXIT_FAILURE);
     }
     char buffer[1024] = {0};
+    char new_buffer[1024] = "login";
     while (1)
     {
         char idPassword[255] = {0};
-        memset(buffer, 0, sizeof(buffer)); 
+        memset(buffer, 0, sizeof(buffer));
         valread = read(new_socket, buffer, 1024);
 
-        if(strcmp(buffer, "register") == 0) {
+        if (strcmp(buffer, "register") == 0)
+        {
             fp = fopen("akun.txt", "a");
             send(new_socket, buffer, strlen(buffer), 0);
-            memset(buffer, 0, sizeof(buffer)); 
-            
+            memset(buffer, 0, sizeof(buffer));
+
             read(new_socket, buffer, 1024);
             fputs(buffer, fp);
             fclose(fp);
             printf("register success\n");
         }
 
+        else if (strcmp(buffer, "login") == 0)
+        {
+            send(new_socket, new_buffer, strlen(new_buffer), 0);
+            read(new_socket, buffer, 1024);
+            char login_auth_msg[100];
+            if (checkAccount(buffer))
+                strcpy(login_auth_msg, "LoginSuccess");
+            else
+                strcpy(login_auth_msg, "LoginFailed:idPasswordWrong");
+            puts(login_auth_msg);
+
+            send(new_socket, login_auth_msg, strlen(login_auth_msg), 0);
+            memset(buffer, 0, sizeof(buffer));
+        }
     }
 }
 
@@ -86,15 +116,15 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    pthread_t threads[100];
-    for (int i = 0; i < 100; i++)
+    pthread_t threads[1024];
+    for (int i = 0; i < 1024; i++)
     {
         int *new_val = &i;
-        pthread_create(&threads[i], NULL, app, (void *)new_val); //menjalankan fungsi untuk menghandle pemain
+        pthread_create(&threads[i], NULL, app, (void *)new_val);
     }
 
-    for (int i = 0; i < 100; i++)  
-        pthread_join(threads[i], NULL); 
+    for (int i = 0; i < 1024; i++)
+        pthread_join(threads[i], NULL);
 
     return 0;
 }
