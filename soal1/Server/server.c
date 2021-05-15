@@ -5,75 +5,100 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #define PORT 8080
 
 int server_fd, new_socket, valread;
 struct sockaddr_in address;
 int addrlen = sizeof(address);
-FILE *fp;
+int usageCount = 0, currentUsage = 0, socketNum[1024];
+int userNow = 0;
 
-int checkAccount(char idPassword[])
+void stopApp(int sock)
 {
-    FILE *file = fopen("akun.txt", "r");
-    if (file != NULL)
-    {
-        char lineFile[256];
-        while (fgets(lineFile, sizeof lineFile, file) != NULL)
-        {
-            if (strcmp(lineFile, idPassword) == 0)
-            {
-                fclose(file);
-                return 1;
-            }
-        }
-        fclose(file);
-    }
-
-    return 0;
+    usageCount--;
+    printf("Current user request stop.\n");
+    userNow++;
+    send(socketNum[userNow], "available", strlen("available"), 1024);
+    printf("User switch.\n");
 }
 
-void *app(void *arg)
+void *authApp(void *arg)
 {
-    int new_socket;
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
+    new_socket = *(int *)arg;
     char buffer[1024] = {0};
-    char new_buffer[1024] = "login";
-    while (1)
+    valread = read(new_socket, buffer, 1024);
+    
+    if (strcmp(buffer, "exit") == 0)
     {
-        char idPassword[255] = {0};
-        memset(buffer, 0, sizeof(buffer));
-        valread = read(new_socket, buffer, 1024);
+        printf("Stopping service for user ...\n");
+        stopApp(new_socket);
+    }
+
+    if (strcmp(buffer, "login") == 0 || strcmp(buffer, "register") == 0)
+    {
+        char id[1024] = {0}, password[1024] = {0};
+        int findAccountStatus = 0;
+        valread = read(new_socket, id, 1024);
+        valread = read(new_socket, password, 1024);
+        char authMsg[1024];
 
         if (strcmp(buffer, "register") == 0)
         {
-            fp = fopen("akun.txt", "a");
-            send(new_socket, buffer, strlen(buffer), 0);
-            memset(buffer, 0, sizeof(buffer));
+            FILE *file;
+            file = fopen("akun.txt", "a");
+            fprintf(file, "%s:%s\n", id, password);
 
-            read(new_socket, buffer, 1024);
-            fputs(buffer, fp);
-            fclose(fp);
-            printf("register success\n");
+            sprintf(authMsg, "registerSuccess");
+            send(new_socket, authMsg, strlen(authMsg), 0);
+            fclose(file);
+            printf("user register success.\n");
+            authApp(&new_socket);
         }
 
-        else if (strcmp(buffer, "login") == 0)
+        if (strcmp(buffer, "login") == 0)
         {
-            send(new_socket, new_buffer, strlen(new_buffer), 0);
-            read(new_socket, buffer, 1024);
-            char login_auth_msg[100];
-            if (checkAccount(buffer))
-                strcpy(login_auth_msg, "LoginSuccess");
-            else
-                strcpy(login_auth_msg, "LoginFailed:idPasswordWrong");
-            puts(login_auth_msg);
+            char buffer[1024];
+            FILE *file;
+            file = fopen("akun.txt", "r");
 
-            send(new_socket, login_auth_msg, strlen(login_auth_msg), 0);
-            memset(buffer, 0, sizeof(buffer));
+            while(fgets(buffer, 1024, file) != NULL)
+            {
+                char temp_id[1024], temp_password[1024];
+                char *temp = strtok(buffer, ":");
+                strcpy(temp_id, temp);
+                temp = strtok(NULL, "\n");
+                strcpy(temp_password, temp);
+
+                if (strcmp(temp_id, id) == 0 && strcmp(temp_password, password) == 0)
+                {
+                    findAccountStatus = 1;
+                }
+            }
+
+            fclose(file);
+
+            if (findAccountStatus == 1)
+            {
+                sprintf(authMsg, "loginSuccess");
+                send(new_socket, authMsg, strlen(authMsg), 0);
+                printf("user login success\n");
+                authApp(&new_socket);
+            }
+            else
+            {
+                sprintf(authMsg, "loginFailed");
+                send(new_socket, authMsg, strlen(authMsg), 0);
+                printf("user login failed.\n");
+                authApp(&new_socket);
+            }
         }
+    }
+    else
+    {
+        authApp(&new_socket);
+        pthread_cancel(pthread_self());
     }
 }
 
@@ -110,21 +135,34 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
+    mkdir("FILES", 0777);
 
     pthread_t threads[1024];
-    for (int i = 0; i < 1024; i++)
+
+    while (1)
     {
-        int *new_val = &i;
-        pthread_create(&threads[i], NULL, app, (void *)new_val);
+        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+        {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+        socketNum[currentUsage] = new_socket;
+        printf("New user connected %d\n", usageCount);
+
+        if (usageCount > 0)
+        {
+            printf("Sending usageStatus to client: %d\n", currentUsage);
+            send(socketNum[currentUsage], "notAvailable", strlen("notAvailable"), 1024);    
+            pthread_create(&threads[currentUsage], NULL, authApp, &new_socket);
+        }
+        else
+        {
+            printf("Sending usageStatus to client: %d\n", currentUsage);
+            send(socketNum[currentUsage], "available", strlen("available"), 1024);
+            pthread_create(&threads[currentUsage], NULL, authApp, &new_socket);
+        }
+        usageCount++;
+        currentUsage++;
     }
-
-    for (int i = 0; i < 1024; i++)
-        pthread_join(threads[i], NULL);
-
     return 0;
 }
