@@ -24,12 +24,65 @@ void stopApp(int sock)
     printf("User switch.\n");
 }
 
+void menuApp(int sock, char *id, char *password)
+{
+    char buffer[1024] = {0};
+    valread = read(sock, buffer, 1024);
+
+    if (strcmp(buffer, "exit") == 0)
+    {
+        printf("Stopping service for user ...\n");
+        stopApp(new_socket);
+    }
+
+    if (strcmp(buffer, "add") == 0)
+    {
+        printf("\nUser choose add application.\n");
+
+        char publisher[255] = {0}, tahunPublikasi[255] = {0}, filePath[255] = {0};
+        valread = read(sock, publisher, 1024);
+        valread = read(sock, tahunPublikasi, 1024);
+        valread = read(sock, filePath, 1024);
+
+        FILE *file;
+        file = fopen("files.tsv", "a");
+        fprintf(file, "%s\t%s\t%s\n", publisher, tahunPublikasi, filePath);
+        fclose(file);
+
+        file = fopen("running.log", "a");
+        char *filenameWithoutFolder = filePath + 6;
+        fprintf(file, "Tambah: %s (%s:%s)\n", filenameWithoutFolder, id, password);
+        fclose(file);
+
+        file = fopen(filePath, "w");
+        bzero(buffer, 1024);
+        while (1)
+        {
+            int n = recv(sock, buffer, 1024, 0);
+
+            if (n != 1024)
+            {
+                break;
+                return;
+            }
+
+            fprintf(file, "%s", buffer);
+            bzero(buffer, 1024);
+        }
+        fclose(file);
+
+        printf("File has been saved in this server.\n");
+    }
+
+    menuApp(sock, id, password);
+}
+
 void *authApp(void *arg)
 {
     new_socket = *(int *)arg;
     char buffer[1024] = {0};
     valread = read(new_socket, buffer, 1024);
-    
+
     if (strcmp(buffer, "exit") == 0)
     {
         printf("Stopping service for user ...\n");
@@ -63,7 +116,7 @@ void *authApp(void *arg)
             FILE *file;
             file = fopen("akun.txt", "r");
 
-            while(fgets(buffer, 1024, file) != NULL)
+            while (fgets(buffer, 1024, file) != NULL)
             {
                 char temp_id[1024], temp_password[1024];
                 char *temp = strtok(buffer, ":");
@@ -84,7 +137,7 @@ void *authApp(void *arg)
                 sprintf(authMsg, "loginSuccess");
                 send(new_socket, authMsg, strlen(authMsg), 0);
                 printf("user login success\n");
-                authApp(&new_socket);
+                menuApp(new_socket, id, password);
             }
             else
             {
@@ -152,7 +205,7 @@ int main(int argc, char const *argv[])
         if (usageCount > 0)
         {
             printf("Sending usageStatus to client: %d\n", currentUsage);
-            send(socketNum[currentUsage], "notAvailable", strlen("notAvailable"), 1024);    
+            send(socketNum[currentUsage], "notAvailable", strlen("notAvailable"), 1024);
             pthread_create(&threads[currentUsage], NULL, authApp, &new_socket);
         }
         else

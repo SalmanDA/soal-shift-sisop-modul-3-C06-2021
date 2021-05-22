@@ -10,11 +10,63 @@
 struct sockaddr_in address;
 int sock = 0, valread;
 
+void addApp(int sock)
+{
+    send(sock, "add", strlen("add"), 0);
+    char publisher[255], tahunPublikasi[255], filePath[255];
+
+    printf("\n--Add Files Application--\n");
+    printf("Publisher : ");
+    getchar();
+    scanf("%[^\n]s", publisher);
+    send(sock, publisher, strlen(publisher), 0);
+    printf("Tahun Publikasi : ");
+    getchar();
+    scanf("%[^\n]s", tahunPublikasi);
+    send(sock, tahunPublikasi, strlen(tahunPublikasi), 0);
+    printf("File Path : ");
+    getchar();
+    scanf("%[^\n]s", filePath);
+    send(sock, filePath, strlen(filePath), 0);
+
+    sleep(1);
+
+    printf("File has been saved to server.\n");
+}
+
+void menuApp(int sock)
+{
+    char menu[255], id[255], pass[255];
+    printf("\n--Main Menu--\n");
+    printf("1. add\n");
+    printf("2. download\n");
+    printf("3. delete\n");
+    printf("4. see\n");
+    printf("5. find\n");
+    printf("6. exit\n");
+    printf("Your choice [write menu name] : ");
+
+    scanf("%s", menu);
+
+    if (strcmp(menu, "exit") == 0)
+    {
+        send(sock, "exit", strlen("exit"), 0);
+        exit(0);
+    }
+
+    if (strcmp(menu, "add") == 0)
+    {
+        addApp(sock);
+    }
+
+    menuApp(sock);
+}
+
 void authApp(int sock)
 {
     char menu[255], id[255], password[255];
 
-    printf("--Main Menu--\n");
+    printf("--Auth Menu--\n");
     printf("1. register\n");
     printf("2. login\n");
     printf("3. exit\n");
@@ -25,6 +77,12 @@ void authApp(int sock)
     {
         send(sock, "exit", strlen("exit"), 0);
         exit(0);
+    }
+
+    if (!strcmp(menu, "register") == 0 && !strcmp(menu, "login") == 0)
+    {
+        authApp(sock);
+        return;
     }
 
     send(sock, menu, strlen(menu), 0);
@@ -49,7 +107,7 @@ void authApp(int sock)
     else if (strcmp(authMsg, "loginSuccess") == 0)
     {
         printf("Logged in.\n");
-        authApp(sock);
+        menuApp(sock);
     }
     else
     {
