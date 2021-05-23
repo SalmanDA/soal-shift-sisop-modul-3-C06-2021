@@ -28,6 +28,22 @@ void write_file(int sockfd, char *filename)
     return;
 }
 
+void findApp(int sock)
+{
+    send(sock, "find", strlen("find"), 0);
+
+    char filename[255];
+    scanf("%s", filename);
+
+    sleep(1);
+    send(sock, filename, strlen(filename), 0);
+
+    char buffer[100000] = {0};
+    int valread;
+    valread = read(sock, buffer, 1024);
+    printf("%s\n", buffer);
+}
+
 void seeApp(int sock)
 {
     send(sock, "see", strlen("see"), 0);
@@ -145,6 +161,11 @@ void menuApp(int sock)
     if (strcmp(menu, "see") == 0)
     {
         seeApp(sock);
+    }
+
+    if (strcmp(menu, "find") == 0)
+    {
+        findApp(sock);
     }
 
     menuApp(sock);

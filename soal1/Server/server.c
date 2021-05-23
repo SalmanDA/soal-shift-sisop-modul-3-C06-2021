@@ -214,6 +214,58 @@ void menuApp(int sock, char *id, char *password)
         send(sock, data, strlen(data), 0);
     }
 
+    if (strcmp(buffer, "find") == 0)
+    {
+        char fileNameRequest[255] = {0};
+        valread = read(sock, fileNameRequest, 1024);
+
+        FILE *file;
+        file = fopen("files.tsv", "r+");
+
+        char line[1024] = {0};
+        char publisher[255], tahunPublikasi[255], fileName[255];
+
+        char data[100000];
+
+        while (fgets(line, 1024, file) != NULL)
+        {
+            sscanf(line, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, fileName);
+            char outputName[300], outputPublisher[300], outputYearOfPublishing[300], outputExtension[300], outputFilePath[300];
+            sprintf(outputPublisher, "Publisher: %s\n", publisher);
+            sprintf(outputYearOfPublishing, "Tahun publishing: %s\n", tahunPublikasi);
+            sprintf(outputFilePath, "Filepath : %s\n", fileName);
+
+            char *extensionGet = strrchr(fileName, '.');
+            char *extension = extensionGet + 1;
+            sprintf(outputExtension, "Ekstensi File : %s\n", extension);
+
+            char fullPathWithoutExt[100];
+            strcpy(fullPathWithoutExt, fileName);
+            char onlyName[100];
+            fullPathWithoutExt[strlen(fullPathWithoutExt) - strlen(extensionGet)] = '\0';
+            sscanf(fullPathWithoutExt, "FILES/%s", onlyName);
+            sprintf(outputName, "Nama: %s\n", onlyName);
+
+            if (strstr(onlyName, fileNameRequest) != 0)
+            {
+                strcat(data, outputName);
+                strcat(data, outputPublisher);
+                strcat(data, outputYearOfPublishing);
+                strcat(data, outputExtension);
+                strcat(data, outputFilePath);
+                strcat(data, "\n");
+            }
+        }
+        if (strlen(data) == 0)
+        {
+            send(sock, "File not found.", strlen("File not found."), 0);
+        }
+        else
+        {
+            send(sock, data, strlen(data), 0);
+        }
+    }
+
     menuApp(sock, id, password);
 }
 
