@@ -548,3 +548,114 @@ Untuk soal 1H diminta membuat running log pada saat add dan delete file (ini sud
 
 ### Kendala Nomor 1 :
 - Pada saat download isi file belum terpindah.
+
+## Laporan Soal Nomor 2
+
+### 2a
+Pada soal ini kami diminta untuk membuat dua buah matriks dan hasil kalinya akan dijadikan sebagai output. Output pada soal ini akan dijadikan matriks yang akan digunakan pada soal 2b, maka dari itu kami menggunakan shared memory.
+
+Pada awalnya input kedua matriks menggunakan looping dua dimensi:
+
+```
+    for(i=0;i<4;i++){
+		for(j=0;j<3;j++){
+			scanf("%d",&a[i][j]);
+		}
+	}
+
+	for(i=0;i<3;i++){
+		for(j=0;j<6;j++){
+			scanf("%d",&b[i][j]);
+		}
+	}
+```
+
+Setelah itu kalikan kedua mantrik sekaligus print hasilnya sebagai output, lalu masukkan hasil perkalian tersebut ke dalam shared memory.
+
+```
+    for(i=0;i<4;i++){
+		for(j=0;j<6;j++){
+			for(k=0;k<3;k++){
+				value[i][j] += a[i][k]*b[k][j];
+			}
+		}
+	}
+
+	for(i=0;i<4;i++){
+		for(j=0;j<6;j++){
+			printf("%d\t",value[i][j]);
+		}
+		printf("\n");
+	}
+```
+
+### Output Soal 2a
+![Output1G](/screenshot/output2a.png)
+
+### 2b
+Pada soal ini kami diminta untuk mengoperasikan output soal 2a dengan matriks yang akan diinputkan, operasinya adalah sebagai berikut:
+- If a >= b  -> a!/(a-b)!
+- If b > a -> a!
+- If 0 -> 0
+
+untuk mengkalisifikasi kasus-kasus di atas, kami menggunakan sebuah fungsi bernama opserasi dan untuk melakukan perhitungan faktorialnya terdapat pada fungsi faktorial berikut:
+
+```
+long long faktorial(int a)
+{
+	if(a==0)
+		return 1;
+	else
+		return (a * faktorial(a-1));
+}
+
+void *operasi(void* args)
+{
+	if(arr[0]==0 || arr[1]==0){
+		printf("0\t");
+	} else
+	if(arr[0] >= arr[1]){
+		printf("%lld\t", faktorial(arr[0])/faktorial(arr[0]-arr[1]) );
+	} else
+	if(arr[0] < arr[1]){
+		printf("%lld\t", faktorial(arr[0]) );
+	} 
+}
+```
+
+Variabel arr[0] merupakan variabel yang menyimpan nilai dari cell matriks lama, sedangkan err[1[ menyimpan nilai matriks yang baru diinputkan.
+
+Setelah melakukan input matriks yang baru, matriks yang lama akan dioperasikan dengan matriks baru menggunakan looping untuk setiap cellnya.
+
+```
+    pthread_t tid[24];
+	int index=0;
+	for(i=0;i<4;i++){
+		for(j=0;j<6;j++){
+			long long *val = malloc(sizeof(long long[4][6]));
+		        *val = value[i][j];
+		        arr[0] = value[i][j];
+			    arr[1] = copy[i][j];
+		        pthread_create(&tid[index], NULL, &operasi, NULL);
+		        sleep(1);
+		        index++;
+		}
+		printf("\n");
+	}
+```
+
+dan yang terakhir, join semua thread yang telah dibuat.
+
+```
+    for (i = 0; i < index; i++) {
+        pthread_join(tid[i], NULL);
+	}
+
+	shmdt(value);
+	shmctl(shmid, IPC_RMID, NULL);
+
+```
+
+### Output Soal 2b
+![Output1G](/screenshot/output2b.png)
+
