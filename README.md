@@ -662,3 +662,14 @@ dan yang terakhir, join semua thread yang telah dibuat.
 ### Kesulitan Soal 2c
 Masih error, program tidak mengeluarkan apapun setelah dijalankan
 
+### Soal 3
+Dalam soal ini terdapat comman ```-f```,```-d```, dan ```*```
+
+### command -f
+Tujuan command ini adalah untuk mengkategorikan suatu file secara spesifik
+
+### Command -d
+Tujuan command ini adalah untuk mengkategorikan seluruh file yang ada pada directory spesifik
+
+### Command *
+Tujuan command ini adalah untuk mengkategorikan seluruh file yang ada pada working directory
