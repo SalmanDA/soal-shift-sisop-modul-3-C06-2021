@@ -669,15 +669,20 @@ Dalam soal ini terdapat comman ```-f```,```-d```, dan ```*```
 Tujuan command ini adalah untuk mengkategorikan suatu file secara spesifik
 
 
-![Run Command -f](/screenshot/Command_f_2)
+![Run Command -f](/screenshot/Command_f_2.JPG)
 
 Setelah menjalankan command "-f" akan didapatkan output seperti ini
-![Output Command -f](/screenshot/Output_f_1)
+![Output Command -f](/screenshot/Output_f_1.JPG)
 
 File pada directory berupa file dengan extension .js sesuai dengan extension dari Citador.js
-![Output Command -f](/screenshot/Output_f_2) 
+![Output Command -f](/screenshot/Output_f_2.JPG) 
 ### Command -d
 Tujuan command ini adalah untuk mengkategorikan seluruh file yang ada pada directory spesifik
+
+![Run Command -d](/screenshot/Command_d.JPG)
+Argumen untuk menjalankan command ini adalah directory tertentu dimana program akan mensortir seluruh file yang ada didalam directory yang ditentukan
+![Output Command -d](/screenshot/Output_d_1.JPG)
+![Output Command -d](/screenshot/Output_d_2.JPG)
 
 ### Command *
 Tujuan command ini adalah untuk mengkategorikan seluruh file yang ada pada working directory
