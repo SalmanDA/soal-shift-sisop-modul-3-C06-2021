@@ -231,12 +231,18 @@ void authApp(int sock)
 
 Dari sisi client pertama input untuk id dan password, kemudian tinggal menunggu auth status / message dari server.
 
+### Output 1A
+![Output1A_1](/screenshot/1A_1.png)
+![Output1A_2](/screenshot/1A_2.png)
+
 ### 1B
 Pada soal 1B diminta untuk membuat folder FILES untuk menyimpan file, kami menggunakan mkdir untuk membuat foldernya.
 
 ```
 mkdir("FILES", 0777);
 ```
+### Output 1B
+![Output1B](/screenshot/1B.png)
 
 ### 1C
 Pada soal 1C diminta untuk membuat fitur add file kepada server dengan perintah add.
@@ -301,10 +307,16 @@ if (strcmp(buffer, "add") == 0)
     }
 ```
 
+### Output 1C
+![Output1C](/screenshot/1B.png)
+
 Dari kode diatas server menerima data file, kemudian menulis pada files.tsv dan runnning.log dan save file di folder FILES.
 
 ### 1D
 Untuk soal 1D diminta untuk mendownload file yang berada pada FILES di server dengan mengecek ke files.tsc apakah file yang ingin didownload valid apa tidak.
+
+### Output 1D
+![Output1D](/screenshot/1D.png)
 
 ### 1E
 Untuk soal 1E diminta untuk perintah delete, akan tetapi tidak menghapus file melainkan mengganti nama menjadi old-[$FILES]
@@ -374,6 +386,9 @@ if (strcmp(buffer, "delete") == 0)
 
 Dari sisi server menerima nama file yang ingin dihapus, kemudian membuka files.tsv dan mengambil data row selain yang ingin didelete untuk dipindah sementara ke temp.tsv , setelah itu temp.tsv di rename menjadi files.tsv setelah files.tsv yang lama dihapus.
 
+### Output 1E
+![Output1E](/screenshot/1E.png)
+
 ### 1F
 Untuk soal 1F diminta untuk fitur see melihat seluruh data files yang ada di files.tsv.
 
@@ -438,7 +453,10 @@ if (strcmp(buffer, "see") == 0)
 
 Dari kode server diatas, untuk melihat seluruh data files.tsv looping per line kemudian setiap datanya dikirimkan melalui socket ke UI / Terminal client.
 
-### 1F
+### Output 1F
+![Output1F](/screenshot/1F.png)
+
+### 1G
 Untuk soal 1F diminta untuk fitu search atau find dengan string, kemudian server memindai nama file yang mengandung string yang diinput user dan dioutput isi detail data filenya seperti nama, publisher, year, extension, path.
 
 Dari sisi client mengirim command dan filename ke socket server :
@@ -519,8 +537,14 @@ if (strcmp(buffer, "find") == 0)
  
 Pada kode diatas, looping per line dari files.tsv kemudian ambil detail data files per line, jika mengandung string dengan fungsi strstr maka output hasilnya ke client, jika tidak maka beri info ke user bahwa file tidak ditemukan.
 
+### Output 1G
+![Output1G](/screenshot/1G.png)
+
 ### 1H
 Untuk soal 1H diminta membuat running log pada saat add dan delete file (ini sudah tertera di penjelasan dan code add & delete).
+
+### Output 1H
+![Output1H](/screenshot/1H.png)
 
 ### Kendala Nomor 1 :
 - Pada saat download isi file belum terpindah.
