@@ -16,7 +16,7 @@ void write_file(int sockfd, char *filename)
 {
     int n;
     FILE *fp;
-    char buffer[1024] ={0};
+    char buffer[1024] = {0};
     // valread = read(sockfd, buffer, 1024);
     // printf("%s\n", buffer);
 
@@ -26,6 +26,17 @@ void write_file(int sockfd, char *filename)
     fprintf(fp, "testdata");
     fclose(fp);
     return;
+}
+
+void deleteApp(int sock)
+{
+    send(sock, "delete", strlen("delete"), 0);
+    char filename[255];
+    scanf("%s", filename);
+
+    sleep(1);
+    send(sock, filename, strlen(filename), 0);
+    printf("Deleted successfully.\n");
 }
 
 void downloadApp(int sock)
@@ -113,6 +124,11 @@ void menuApp(int sock)
     if (strcmp(menu, "download") == 0)
     {
         downloadApp(sock);
+    }
+
+    if (strcmp(menu, "delete") == 0)
+    {
+        deleteApp(sock);
     }
 
     menuApp(sock);

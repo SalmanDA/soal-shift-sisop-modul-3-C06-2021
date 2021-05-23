@@ -130,6 +130,50 @@ void menuApp(int sock, char *id, char *password)
         // }
     }
 
+    if (strcmp(buffer, "delete") == 0)
+    {
+        char deleteFileName[255] = {0};
+        valread = read(sock, deleteFileName, 1024);
+
+        FILE *file, *fileTemp;
+        file = fopen("files.tsv", "r+");
+        fileTemp = fopen("temp.tsv", "w");
+
+        char data[1024] = {0};
+        char publisher[255], tahunPublikasi[255], filePath[255];
+
+        while (fgets(data, 1024, file) != NULL)
+        {
+            sscanf(data, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, filePath);
+
+            char *fileName = filePath + 6;
+
+            if (strcmp(fileName, deleteFileName) != 0)
+            {
+                fprintf(fileTemp, "%s", data);
+            }
+
+            bzero(data, 1024);
+        }
+        fclose(file);
+        fclose(fileTemp);
+        remove("files.tsv");
+        rename("temp.tsv", "files.tsv");
+
+        file = fopen("running.log", "a+");
+
+        fprintf(file, "Hapus: %s (%s:%s)\n", deleteFileName, id, password);
+        fclose(file);
+
+        char fullPathFileName[300];
+        sprintf(fullPathFileName, "FILES/%s", deleteFileName);
+
+        char deletedPathFileName[300];
+        sprintf(deletedPathFileName, "FILES/old-%s", deleteFileName);
+
+        rename(fullPathFileName, deletedPathFileName);
+    }
+
     menuApp(sock, id, password);
 }
 
