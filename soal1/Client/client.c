@@ -5,10 +5,42 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #define PORT 8080
 
 struct sockaddr_in address;
 int sock = 0, valread;
+
+void downloadApp(int sock)
+{
+    send(sock, "download", strlen("download"), 0);
+
+    char fileName[255];
+    scanf("%s", fileName);
+
+    sleep(1);
+    send(sock, fileName, strlen(fileName), 0);
+
+    char msg[1024] = {0};
+    valread = read(sock, msg, 1024);
+
+    char fileNameWithPath[255] = {0};
+    strcpy(fileNameWithPath, "FILES/");
+    strcat(fileNameWithPath, fileName);
+
+    if (strcmp(msg, "found") == 0)
+    {
+        sleep(1);
+        FILE *file = fopen(fileNameWithPath, "w");
+        printf("File downloaded successfully.\n");
+    }
+
+    else
+    {
+        printf("File not found.\n");
+    }
+}
 
 void addApp(int sock)
 {
@@ -57,6 +89,11 @@ void menuApp(int sock)
     if (strcmp(menu, "add") == 0)
     {
         addApp(sock);
+    }
+
+    if (strcmp(menu, "download") == 0)
+    {
+        downloadApp(sock);
     }
 
     menuApp(sock);
@@ -142,6 +179,8 @@ int main()
         printf("\nConnection Failed \n");
         return -1;
     }
+
+    mkdir("FILES", 0777);
 
     while (1)
     {

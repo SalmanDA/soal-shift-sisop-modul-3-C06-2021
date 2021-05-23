@@ -74,6 +74,54 @@ void menuApp(int sock, char *id, char *password)
         printf("File has been saved in this server.\n");
     }
 
+    if (strcmp(buffer, "download") == 0)
+    {
+        char downloadFileName[255] = {0};
+        int found = 0;
+        char msg[255];
+        valread = read(sock, downloadFileName, 1024);
+
+        FILE *file = fopen("files.tsv", "r");
+        char line[255];
+        while (fgets(line, 255 - 1, file))
+        {
+            line[strcspn(line, "\n")] = 0;
+            // char *token = strtok(line, "\t");
+            // while (token != NULL)
+            // {
+            //     printf(" %s\n", token);
+            //     token = strtok(NULL, "\t");
+            // }
+
+            char fileNameSearch[255] ={0};
+            strcpy(fileNameSearch, strtok(line, "\t"));
+            strcpy(fileNameSearch, strtok(NULL, "\t"));
+            strcpy(fileNameSearch, strtok(NULL, "\t"));
+
+            char downloadFileNameWithPath[255] = {0};
+            strcpy(downloadFileNameWithPath, "FILES/");
+            strcat(downloadFileNameWithPath, downloadFileName);
+
+            if (strcmp(downloadFileNameWithPath, fileNameSearch) == 0)
+            {
+                found = 1;
+            }
+        }
+
+        if (found == 1)
+        {
+            sprintf(msg, "found");
+            send(sock, msg, strlen(msg), 0);
+            printf("File download successfully.\n");
+        }
+        else
+        {
+            sprintf(msg, "notfound");
+            send(sock, msg, strlen(msg), 0);
+            printf("File not found.\n");
+        }
+    }
+
     menuApp(sock, id, password);
 }
 
