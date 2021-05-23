@@ -230,3 +230,297 @@ void authApp(int sock)
 ```
 
 Dari sisi client pertama input untuk id dan password, kemudian tinggal menunggu auth status / message dari server.
+
+### 1B
+Pada soal 1B diminta untuk membuat folder FILES untuk menyimpan file, kami menggunakan mkdir untuk membuat foldernya.
+
+```
+mkdir("FILES", 0777);
+```
+
+### 1C
+Pada soal 1C diminta untuk membuat fitur add file kepada server dengan perintah add.
+
+Untuk sisi client sebagai berikut :
+
+```
+void addApp(int sock)
+{
+    send(sock, "add", strlen("add"), 0);
+    char publisher[255], tahunPublikasi[255], filePath[255];
+
+    printf("\n--Add Files Application--\n");
+    printf("Publisher : ");
+    getchar();
+    scanf("%[^\n]s", publisher);
+    send(sock, publisher, strlen(publisher), 0);
+    printf("Tahun Publikasi : ");
+    getchar();
+    scanf("%[^\n]s", tahunPublikasi);
+    send(sock, tahunPublikasi, strlen(tahunPublikasi), 0);
+    printf("File Path : ");
+    getchar();
+    scanf("%[^\n]s", filePath);
+    send(sock, filePath, strlen(filePath), 0);
+
+    sleep(1);
+
+    printf("File has been saved to server.\n");
+}
+```
+
+Dari kode diatas, untuk files diberi input 3 data, kemudian dikirim melalui socket keserver.
+
+Dari sisi server :
+
+```
+if (strcmp(buffer, "add") == 0)
+    {
+        printf("\nUser choose add application.\n");
+
+        char publisher[255] = {0}, tahunPublikasi[255] = {0}, filePath[255] = {0};
+        valread = read(sock, publisher, 1024);
+        valread = read(sock, tahunPublikasi, 1024);
+        valread = read(sock, filePath, 1024);
+
+        FILE *file;
+        file = fopen("files.tsv", "a");
+        fprintf(file, "%s\t%s\t%s\n", publisher, tahunPublikasi, filePath);
+        fclose(file);
+
+        file = fopen("running.log", "a");
+        char *filenameWithoutFolder = filePath + 6;
+        fprintf(file, "Tambah: %s (%s:%s)\n", filenameWithoutFolder, id, password);
+        fclose(file);
+
+        file = fopen(filePath, "w");
+        fprintf(file, "%s\t%s\n", publisher, tahunPublikasi);
+        fclose(file);
+
+        printf("File has been saved in this server.\n");
+    }
+```
+
+Dari kode diatas server menerima data file, kemudian menulis pada files.tsv dan runnning.log dan save file di folder FILES.
+
+### 1D
+Untuk soal 1D diminta untuk mendownload file yang berada pada FILES di server dengan mengecek ke files.tsc apakah file yang ingin didownload valid apa tidak.
+
+### 1E
+Untuk soal 1E diminta untuk perintah delete, akan tetapi tidak menghapus file melainkan mengganti nama menjadi old-[$FILES]
+
+Dari sisi client hanya mengirim nama file yang akan dihapus :
+
+```
+void deleteApp(int sock)
+{
+    send(sock, "delete", strlen("delete"), 0);
+    char filename[255];
+    scanf("%s", filename);
+
+    sleep(1);
+    send(sock, filename, strlen(filename), 0);
+    printf("Deleted successfully.\n");
+}
+```
+
+Dari sisi server :
+
+```
+if (strcmp(buffer, "delete") == 0)
+    {
+        char deleteFileName[255] = {0};
+        valread = read(sock, deleteFileName, 1024);
+
+        FILE *file, *fileTemp;
+        file = fopen("files.tsv", "r+");
+        fileTemp = fopen("temp.tsv", "w");
+
+        char data[1024] = {0};
+        char publisher[255], tahunPublikasi[255], filePath[255];
+
+        while (fgets(data, 1024, file) != NULL)
+        {
+            sscanf(data, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, filePath);
+
+            char *fileName = filePath + 6;
+
+            if (strcmp(fileName, deleteFileName) != 0)
+            {
+                fprintf(fileTemp, "%s", data);
+            }
+
+            bzero(data, 1024);
+        }
+        fclose(file);
+        fclose(fileTemp);
+        remove("files.tsv");
+        rename("temp.tsv", "files.tsv");
+
+        file = fopen("running.log", "a+");
+
+        fprintf(file, "Hapus: %s (%s:%s)\n", deleteFileName, id, password);
+        fclose(file);
+
+        char fullPathFileName[300];
+        sprintf(fullPathFileName, "FILES/%s", deleteFileName);
+
+        char deletedPathFileName[300];
+        sprintf(deletedPathFileName, "FILES/old-%s", deleteFileName);
+
+        rename(fullPathFileName, deletedPathFileName);
+    }
+```
+
+Dari sisi server menerima nama file yang ingin dihapus, kemudian membuka files.tsv dan mengambil data row selain yang ingin didelete untuk dipindah sementara ke temp.tsv , setelah itu temp.tsv di rename menjadi files.tsv setelah files.tsv yang lama dihapus.
+
+### 1F
+Untuk soal 1F diminta untuk fitur see melihat seluruh data files yang ada di files.tsv.
+
+Dari sisi client hanya mengirimkan jenis command "see":
+
+```
+void seeApp(int sock)
+{
+    send(sock, "see", strlen("see"), 0);
+
+    char buffer[100000] = {0};
+    int valread;
+    valread = read(sock, buffer, 1024);
+
+    printf("%s\n", buffer);
+}
+```
+
+Dari sisi server :
+
+```
+if (strcmp(buffer, "see") == 0)
+    {
+        FILE *file;
+        file = fopen("files.tsv", "r+");
+
+        char lineFile[1024] = {0};
+        char publisher[255], tahunPublikasi[255], filename[255];
+
+        char data[100000];
+
+        while (fgets(lineFile, 1024, file) != NULL)
+        {
+            sscanf(lineFile, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, filename);
+            char outputName[300], outputPublisher[300], outputYearOfPublish[300], outputExtension[300], outputFilepath[300];
+
+            sprintf(outputPublisher, "Publisher: %s\n", publisher);
+            sprintf(outputYearOfPublish, "Tahun publishing: %s\n", tahunPublikasi);
+            sprintf(outputFilepath, "Filepath : %s\n", filename);
+
+            char *extGet = strrchr(filename, '.');
+            char *extensionType = extGet + 1;
+            sprintf(outputExtension, "Ekstensi File : %s\n", extensionType);
+
+            char pathWithoutExtensionFile[255];
+            strcpy(pathWithoutExtensionFile, filename);
+            char justNameOfFile[255];
+            pathWithoutExtensionFile[strlen(pathWithoutExtensionFile) - strlen(extGet)] = '\0';
+            sscanf(pathWithoutExtensionFile, "FILES/%s", justNameOfFile);
+            sprintf(outputName, "Nama: %s\n", justNameOfFile);
+
+            strcat(data, outputName);
+            strcat(data, outputPublisher);
+            strcat(data, outputYearOfPublish);
+            strcat(data, outputExtension);
+            strcat(data, outputFilepath);
+            strcat(data, "\n");
+        }
+        send(sock, data, strlen(data), 0);
+    }
+```
+
+Dari kode server diatas, untuk melihat seluruh data files.tsv looping per line kemudian setiap datanya dikirimkan melalui socket ke UI / Terminal client.
+
+### 1F
+Untuk soal 1F diminta untuk fitu search atau find dengan string, kemudian server memindai nama file yang mengandung string yang diinput user dan dioutput isi detail data filenya seperti nama, publisher, year, extension, path.
+
+Dari sisi client mengirim command dan filename ke socket server :
+
+```
+void findApp(int sock)
+{
+    send(sock, "find", strlen("find"), 0);
+
+    char filename[255];
+    scanf("%s", filename);
+
+    sleep(1);
+    send(sock, filename, strlen(filename), 0);
+
+    char buffer[100000] = {0};
+    int valread;
+    valread = read(sock, buffer, 1024);
+    printf("%s\n", buffer);
+}
+```
+
+Dari sisi server :
+
+```
+if (strcmp(buffer, "find") == 0)
+    {
+        char fileNameRequest[255] = {0};
+        valread = read(sock, fileNameRequest, 1024);
+
+        FILE *file;
+        file = fopen("files.tsv", "r+");
+
+        char line[1024] = {0};
+        char publisher[255], tahunPublikasi[255], fileName[255];
+
+        char data[100000];
+
+        while (fgets(line, 1024, file) != NULL)
+        {
+            sscanf(line, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, fileName);
+            char outputName[300], outputPublisher[300], outputYearOfPublishing[300], outputExtension[300], outputFilePath[300];
+            sprintf(outputPublisher, "Publisher: %s\n", publisher);
+            sprintf(outputYearOfPublishing, "Tahun publishing: %s\n", tahunPublikasi);
+            sprintf(outputFilePath, "Filepath : %s\n", fileName);
+
+            char *extensionGet = strrchr(fileName, '.');
+            char *extension = extensionGet + 1;
+            sprintf(outputExtension, "Ekstensi File : %s\n", extension);
+
+            char fullPathWithoutExt[100];
+            strcpy(fullPathWithoutExt, fileName);
+            char onlyName[100];
+            fullPathWithoutExt[strlen(fullPathWithoutExt) - strlen(extensionGet)] = '\0';
+            sscanf(fullPathWithoutExt, "FILES/%s", onlyName);
+            sprintf(outputName, "Nama: %s\n", onlyName);
+
+            if (strstr(onlyName, fileNameRequest) != 0)
+            {
+                strcat(data, outputName);
+                strcat(data, outputPublisher);
+                strcat(data, outputYearOfPublishing);
+                strcat(data, outputExtension);
+                strcat(data, outputFilePath);
+                strcat(data, "\n");
+            }
+        }
+        if (strlen(data) == 0)
+        {
+            send(sock, "File not found.", strlen("File not found."), 0);
+        }
+        else
+        {
+            send(sock, data, strlen(data), 0);
+        }
+    }
+ ```
+ 
+Pada kode diatas, looping per line dari files.tsv kemudian ambil detail data files per line, jika mengandung string dengan fungsi strstr maka output hasilnya ke client, jika tidak maka beri info ke user bahwa file tidak ditemukan.
+
+### 1H
+Untuk soal 1H diminta membuat running log pada saat add dan delete file (ini sudah tertera di penjelasan dan code add & delete).
+
+### Kendala Nomor 1 :
+- Pada saat download isi file belum terpindah.
