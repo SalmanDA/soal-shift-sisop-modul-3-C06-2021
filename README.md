@@ -668,6 +668,14 @@ Dalam soal ini terdapat comman ```-f```,```-d```, dan ```*```
 ### command -f
 Tujuan command ini adalah untuk mengkategorikan suatu file secara spesifik
 
+
+![Run Command -f](/screenshot/Command_f_2)
+
+Setelah menjalankan command "-f" akan didapatkan output seperti ini
+![Output Command -f](/screenshot/Output_f_1)
+
+File pada directory berupa file dengan extension .js sesuai dengan extension dari Citador.js
+![Output Command -f](/screenshot/Output_f_2) 
 ### Command -d
 Tujuan command ini adalah untuk mengkategorikan seluruh file yang ada pada directory spesifik
 
