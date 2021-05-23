@@ -659,3 +659,6 @@ dan yang terakhir, join semua thread yang telah dibuat.
 ### Output Soal 2b
 ![Output1G](/screenshot/output2b.png)
 
+### Kesulitan Soal 2c
+Masih error, program tidak mengeluarkan apapun setelah dijalankan
+
