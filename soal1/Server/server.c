@@ -24,6 +24,25 @@ void stopApp(int sock)
     printf("User switch.\n");
 }
 
+void send_file(FILE *fp, int sockfd)
+{
+    int n;
+    char data[1024] = {0};
+
+    while (fgets(data, 1024, fp) != NULL)
+    {
+        printf("%s\n", data);
+        // if (send(sockfd, data, sizeof(data), 0) == -1)
+        // {
+        //     perror("[-]Error in sending file.");
+        //     exit(1);
+        // }
+        // bzero(data, 1024);
+        // send(sockfd, data, strlen(data), 0);
+    }
+    send(sockfd, "halo", sizeof("halo"), 0);
+}
+
 void menuApp(int sock, char *id, char *password)
 {
     char buffer[1024] = {0};
@@ -55,20 +74,7 @@ void menuApp(int sock, char *id, char *password)
         fclose(file);
 
         file = fopen(filePath, "w");
-        bzero(buffer, 1024);
-        while (1)
-        {
-            int n = recv(sock, buffer, 1024, 0);
-
-            if (n != 1024)
-            {
-                break;
-                return;
-            }
-
-            fprintf(file, "%s", buffer);
-            bzero(buffer, 1024);
-        }
+        fprintf(file, "%s\t%s\n", publisher, tahunPublikasi);
         fclose(file);
 
         printf("File has been saved in this server.\n");
@@ -80,25 +86,19 @@ void menuApp(int sock, char *id, char *password)
         int found = 0;
         char msg[255];
         valread = read(sock, downloadFileName, 1024);
+        char downloadFileNameWithPath[255] = {0};
 
         FILE *file = fopen("files.tsv", "r");
         char line[255];
         while (fgets(line, 255 - 1, file))
         {
             line[strcspn(line, "\n")] = 0;
-            // char *token = strtok(line, "\t");
-            // while (token != NULL)
-            // {
-            //     printf(" %s\n", token);
-            //     token = strtok(NULL, "\t");
-            // }
 
-            char fileNameSearch[255] ={0};
+            char fileNameSearch[255] = {0};
             strcpy(fileNameSearch, strtok(line, "\t"));
             strcpy(fileNameSearch, strtok(NULL, "\t"));
             strcpy(fileNameSearch, strtok(NULL, "\t"));
 
-            char downloadFileNameWithPath[255] = {0};
             strcpy(downloadFileNameWithPath, "FILES/");
             strcat(downloadFileNameWithPath, downloadFileName);
 
@@ -110,16 +110,24 @@ void menuApp(int sock, char *id, char *password)
 
         if (found == 1)
         {
-            sprintf(msg, "found");
-            send(sock, msg, strlen(msg), 0);
+            sleep(1);
+            FILE *fp = fopen(downloadFileNameWithPath, "r");
+            send_file(fp, sock);
             printf("File download successfully.\n");
         }
-        else
-        {
-            sprintf(msg, "notfound");
-            send(sock, msg, strlen(msg), 0);
-            printf("File not found.\n");
-        }
+
+        // if (found == 1)
+        // {
+        //     sprintf(msg, "found");
+        //     send(sock, msg, strlen(msg), 0);
+        //     printf("File download successfully.\n");
+        // }
+        // else
+        // {
+        //     sprintf(msg, "notfound");
+        //     send(sock, msg, strlen(msg), 0);
+        //     printf("File not found.\n");
+        // }
     }
 
     menuApp(sock, id, password);

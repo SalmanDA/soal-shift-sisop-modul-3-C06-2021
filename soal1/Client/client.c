@@ -12,6 +12,22 @@
 struct sockaddr_in address;
 int sock = 0, valread;
 
+void write_file(int sockfd, char *filename)
+{
+    int n;
+    FILE *fp;
+    char buffer[1024] ={0};
+    // valread = read(sockfd, buffer, 1024);
+    // printf("%s\n", buffer);
+
+    sleep(1);
+    fp = fopen(filename, "w");
+    // fprintf(fp, "%s",buffer);
+    fprintf(fp, "testdata");
+    fclose(fp);
+    return;
+}
+
 void downloadApp(int sock)
 {
     send(sock, "download", strlen("download"), 0);
@@ -29,17 +45,20 @@ void downloadApp(int sock)
     strcpy(fileNameWithPath, "FILES/");
     strcat(fileNameWithPath, fileName);
 
-    if (strcmp(msg, "found") == 0)
-    {
-        sleep(1);
-        FILE *file = fopen(fileNameWithPath, "w");
-        printf("File downloaded successfully.\n");
-    }
+    write_file(sock, fileNameWithPath);
+    printf("File downloaded successfully.\n");
 
-    else
-    {
-        printf("File not found.\n");
-    }
+    // if (strcmp(msg, "found") == 0)
+    // {
+    //     sleep(1);
+    //     FILE *file = fopen(fileNameWithPath, "w");
+    //     printf("File downloaded successfully.\n");
+    // }
+
+    // else
+    // {
+    //     printf("File not found.\n");
+    // }
 }
 
 void addApp(int sock)
