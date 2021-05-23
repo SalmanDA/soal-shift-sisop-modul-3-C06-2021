@@ -17,15 +17,15 @@ long long faktorial(int a)
 
 void *operasi(void* args)
 {
+	if(arr[0]==0 || arr[1]==0){
+		printf("0\t");
+	} else
 	if(arr[0] >= arr[1]){
 		printf("%lld\t", faktorial(arr[0])/faktorial(arr[0]-arr[1]) );
 	} else
 	if(arr[0] < arr[1]){
 		printf("%lld\t", faktorial(arr[0]) );
-	} else 
-	if(arr[0]==0 || arr[1]==0){
-		printf("0\t");
-	}
+	} 
 
 //	printf("%d", arr[0]);
 }
