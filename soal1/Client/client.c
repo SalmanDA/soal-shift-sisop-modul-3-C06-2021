@@ -28,6 +28,17 @@ void write_file(int sockfd, char *filename)
     return;
 }
 
+void seeApp(int sock)
+{
+    send(sock, "see", strlen("see"), 0);
+
+    char buffer[100000] = {0};
+    int valread;
+    valread = read(sock, buffer, 1024);
+
+    printf("%s\n", buffer);
+}
+
 void deleteApp(int sock)
 {
     send(sock, "delete", strlen("delete"), 0);
@@ -129,6 +140,11 @@ void menuApp(int sock)
     if (strcmp(menu, "delete") == 0)
     {
         deleteApp(sock);
+    }
+
+    if (strcmp(menu, "see") == 0)
+    {
+        seeApp(sock);
     }
 
     menuApp(sock);

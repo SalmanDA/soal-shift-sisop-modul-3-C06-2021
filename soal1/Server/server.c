@@ -174,6 +174,46 @@ void menuApp(int sock, char *id, char *password)
         rename(fullPathFileName, deletedPathFileName);
     }
 
+    if (strcmp(buffer, "see") == 0)
+    {
+        FILE *file;
+        file = fopen("files.tsv", "r+");
+
+        char lineFile[1024] = {0};
+        char publisher[255], tahunPublikasi[255], filename[255];
+
+        char data[100000];
+
+        while (fgets(lineFile, 1024, file) != NULL)
+        {
+            sscanf(lineFile, "%[^\t]\t%s\t%s", publisher, tahunPublikasi, filename);
+            char outputName[300], outputPublisher[300], outputYearOfPublish[300], outputExtension[300], outputFilepath[300];
+
+            sprintf(outputPublisher, "Publisher: %s\n", publisher);
+            sprintf(outputYearOfPublish, "Tahun publishing: %s\n", tahunPublikasi);
+            sprintf(outputFilepath, "Filepath : %s\n", filename);
+
+            char *extGet = strrchr(filename, '.');
+            char *extensionType = extGet + 1;
+            sprintf(outputExtension, "Ekstensi File : %s\n", extensionType);
+
+            char pathWithoutExtensionFile[255];
+            strcpy(pathWithoutExtensionFile, filename);
+            char justNameOfFile[255];
+            pathWithoutExtensionFile[strlen(pathWithoutExtensionFile) - strlen(extGet)] = '\0';
+            sscanf(pathWithoutExtensionFile, "FILES/%s", justNameOfFile);
+            sprintf(outputName, "Nama: %s\n", justNameOfFile);
+
+            strcat(data, outputName);
+            strcat(data, outputPublisher);
+            strcat(data, outputYearOfPublish);
+            strcat(data, outputExtension);
+            strcat(data, outputFilepath);
+            strcat(data, "\n");
+        }
+        send(sock, data, strlen(data), 0);
+    }
+
     menuApp(sock, id, password);
 }
 
